@@ -1,0 +1,28 @@
+# bottom
+bottom:
+  qianghua : [1020, 650, 1060, 670]
+  shixiu: [1022, 285, 1091, 350]
+  sheding: [672, 580, 935, 651]
+  xuandui: [1186, 61, 1225, 98]
+  chuji: [533, 625, 749, 682]
+  xingdongkaishi: [1166, 677, 1267, 706]
+  zhandouchengguo: [63, 54, 155, 87]
+  zaiwanyici: [660, 482, 929, 552]
+  shengdianmoshi_img: [389, 413, 656, 443]
+  shengdianmoshi_bottom: [410, 428]
+  
+keyboard:
+  down: [40, 0x50]
+  up: [38, 0x48]
+  left: [37, 0x4b]
+  right: [39, 0x4d]
+  S: [83, 0x1f]
+  enter: [13, 0x1c]
+  A: [65, 0x1e]
+  5: [53, 0x06]
+  2: [50, 0x03]
+  1: [49, 0x02]
+  3: [51, 0x04]
+  4: [52, 0x05]
+  6: [54, 0x07]
+
