@@ -15,12 +15,15 @@ window_height = 720
 window_weight = 1280
 
 
-def read_config():
+def read_config(config_path):
     # 读取配置文件
     with open(config_path, "r", encoding="utf-8") as f:
         config = yaml.load(f, Loader=yaml.FullLoader)
     return config
 
+config = read_config(config_path)
+bottom = config["bottom"]
+keyboard = config["keyboard"]
 
 def init_window(target_window_title):
     # 切换到目标窗口，并设置目标窗口的大小
@@ -72,10 +75,12 @@ def key_down_up_n(key, times):
 
 def key_down_up_list(key_list):
     # 按下并释放某个按键列表
-    # key_list: 按键列表 [[bvk, bScan], [bvk, bScan], ...]
+    # key_list: 按键列表 [按键]
     for key in key_list:
-        win32api.keybd_event(key[0], key[1], 0, 0)
-        win32api.keybd_event(key[0], key[1], win32con.KEYEVENTF_KEYUP, 0)
+        bvk = keyboard[key][0]
+        bScan = keyboard[key][1]
+        win32api.keybd_event(bvk, bScan, 0, 0)
+        win32api.keybd_event(bvk, bScan, win32con.KEYEVENTF_KEYUP, 0)
         time.sleep(0.5)
 
 
@@ -114,12 +119,28 @@ def wait_until_bottom_appear(w, bottom_name, bottom_location):
             break
         time.sleep(0.5)
 
-
+def act_cmd_list(w, cmd_list):
+    # 执行指令列表
+    # w: 目标窗口
+    # cmd_list: 指令列表
+    for cmd in cmd_list:
+        if cmd[0] == 'B':
+            location = bottom[cmd[2:]]
+            click_bottom(w, location)
+        if cmd[0] == 'K':
+            key = keyboard[cmd[2:]]
+            key_down_up_n(key, 1)
+        if cmd[0] == 'W':
+            location = bottom[cmd[2:]]
+            wait_until_bottom_appear(w, cmd[2:], location)
+        
+def skillnum2keyboardlist(list, num):
+    for i in range(0, num):
+        list.append('S')
+    list.append('enter')
+    return list 
 
 if __name__ == "__main__":
-    config = read_config()
-    bottom = config["bottom"]
-    keyboard = config["keyboard"]
     w = init_window(target_window_title)
 
     click_bottom(w, bottom["qianghua"])
@@ -158,7 +179,7 @@ if __name__ == "__main__":
     # 2号位释放3技能， key 2 s s s enter
     key_list = [keyboard[2], keyboard["S"], keyboard["S"], keyboard["S"], keyboard["enter"]]
     key_down_up_list(key_list)
-    # 3号位换6号位圣华，1号位释放2技能给2号位，key 1 6 3 s s enter 2
+    # 3号位换6号位圣华，3号位释放2技能给2号位，key 3 6 3 s s enter 2
     key_list = [keyboard[3], keyboard[6], keyboard[3], keyboard["S"], keyboard["S"], keyboard["enter"] ,keyboard[2]]
     key_down_up_list(key_list)
     key_down_up_n(keyboard["enter"], 1)

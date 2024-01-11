@@ -9,7 +9,11 @@ bottom:
   zhandouchengguo: [63, 54, 155, 87]
   zaiwanyici: [660, 482, 929, 552]
   shengdianmoshi_img: [389, 413, 656, 443]
-  shengdianmoshi_bottom: [410, 428]
+  shengdianmoshi_bottom: [410, 428, 410, 428]
+  baoshi: [810, 371, 876, 432]
+  xiangqing: [906, 522, 1080, 570]
+  zhandou: [660, 482, 929, 552]
+  max: [826, 400, 876, 451]
   
 keyboard:
   down: [40, 0x50]
@@ -17,6 +21,7 @@ keyboard:
   left: [37, 0x4b]
   right: [39, 0x4d]
   S: [83, 0x1f]
+  W: [87, 0x11]
   enter: [13, 0x1c]
   A: [65, 0x1e]
   5: [53, 0x06]
@@ -25,4 +30,21 @@ keyboard:
   3: [51, 0x04]
   4: [52, 0x05]
   6: [54, 0x07]
+
+daily:
+  arachnelineA:
+    start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, B-max, K-enter]
+    select: 1
+    skill-list: []
+    end: []
+  
+  shixiu:
+    start: [B-qianghua, B-shixiu, B-sheding]
+    select: 4
+    # [几号位，上谁， 放几号技能， 放给谁] 0代表不放技能, 
+    skill-list: [
+      [[1, 1, 0, 0], [2, 5, 2, 0], [3, 3, 2, 2]],
+      [[1, 1, 1, 0], [2, 2, 3, 0], [3, 6, 2, 2]]
+      ]
+    end: [K-enter, W-zhandouchengguo, B-zhandouchengguo, B-zhandouchengguo, W-shengdianmoshi_img, B-shengdianmoshi_bottom, B-zaiwanyici]
 
