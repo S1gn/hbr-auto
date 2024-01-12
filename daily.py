@@ -41,7 +41,7 @@ class Daily:
     
     def wait_battle(self):
         time.sleep(5)
-        bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"])
+        bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
 
     def battle(self):
         for round_skill in self.daily_config['skill-list']:
@@ -67,7 +67,8 @@ class Daily:
                     else:
                         continue
             keyboard_list.append('enter')
-            bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"])
+            bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
+            print(keyboard_list)
             bc.key_down_up_list(keyboard_list)
     
     def end(self):
@@ -79,6 +80,7 @@ class Daily:
 
 if __name__ == "__main__":
     w = bc.init_window(bc.target_window_title)
+    # daily = Daily("arachnelineA", w)
     daily = Daily("shixiu", w)
     daily.start()
     daily.select_team()

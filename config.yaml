@@ -14,7 +14,10 @@ bottom:
   xiangqing: [906, 522, 1080, 570]
   zhandou: [660, 482, 929, 552]
   max: [826, 400, 876, 451]
-  
+
+compare:
+  xingdongkaishi: [[5, 7], [37, 8], [51, 8], [70, 8], [87, 8], [15, 14], [93, 21], [93, 19]]
+
 keyboard:
   down: [40, 0x50]
   up: [38, 0x48]
@@ -33,9 +36,14 @@ keyboard:
 
 daily:
   arachnelineA:
-    start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, B-max, K-enter]
+    start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, K-enter, B-max, K-enter]
     select: 1
-    skill-list: []
+    skill-list: [
+      [[1, 1, 2, 0], [2, 2, 0, 0], [3, 3, 2, 0]],
+      [[1, 1, 3, 0], [2, 2, 0, 0], [3, 3, 0, 0]],
+      [[1, 1, 4, 3], [2, 2, 4, 3], [3, 3, 1, 0]],
+      [[1, 4, 1, 0], [2, 2, 0, 0], [3, 3, 4, 0]],
+    ]
     end: []
   
   shixiu:
