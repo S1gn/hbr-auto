@@ -7,6 +7,8 @@ import yaml
 import time
 import cv2
 import numpy as np
+from skimage.metrics import structural_similarity as compare_ssim
+from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from PIL import Image
  
 config_path = "./config.yaml"
@@ -85,52 +87,14 @@ def key_down_up_list(key_list):
         time.sleep(0.5)
 
 
-def compare_images(image1_path, image2_path, threshold):
-    result = []
+def compare_images(image1_path, image2_path):
     # 加载并转换为灰度图像, 之后二值化处理
     img1 = cv2.imread(image1_path)
-    img1 = cv2.cvtColor(img1, cv2.COLOR_BGR2GRAY)
     img2 = cv2.imread(image2_path)
-    img2 = cv2.cvtColor(img2, cv2.COLOR_BGR2GRAY)
     
-    # 灰度直方图算法
-    # 计算单通道的直方图的相似值
-    hist1 = cv2.calcHist([img1], [0], None, [256], [0.0, 255.0])
-    hist2 = cv2.calcHist([img2], [0], None, [256], [0.0, 255.0])
-    # 计算直方图的重合度
-    degree = 0
-    for i in range(len(hist1)):
-        if hist1[i] != hist2[i]:
-            degree = degree + \
-                (1 - abs(hist1[i] - hist2[i]) / max(hist1[i], hist2[i]))
-        else:
-            degree = degree + 1
-    degree = degree / len(hist1)
-    result.append(degree)
-    # 有背景的图片需要二值化处理
-    if(threshold != 0):
-        img11 = cv2.threshold(img1, 127, 255, cv2.THRESH_BINARY)[1]
-        img22 = cv2.threshold(img2, 127, 255, cv2.THRESH_BINARY)[1]
-        hist1 = cv2.calcHist([img11], [0], None, [256], [0.0, 255.0])
-        hist2 = cv2.calcHist([img22], [0], None, [256], [0.0, 255.0])
-        # 计算直方图的重合度
-        degree = 0
-        for i in range(len(hist1)):
-            if hist1[i] != hist2[i]:
-                degree = degree + \
-                    (1 - abs(hist1[i] - hist2[i]) / max(hist1[i], hist2[i]))
-            else:
-                degree = degree + 1
-        degree = degree / len(hist1)
-        result.append(degree)
-
-        print(result)
-        if(result[0] > 0.7 and result[1] > 0.9):
-            return True
-        else:
-            return False
-        
-    if(result[0] > 0.8):
+    ssim = compare_ssim(img1, img2, multichannel=True)
+    print(ssim)
+    if(ssim > 0.9):
         return True
     else:
         return False
@@ -151,12 +115,11 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
     print(distance)
     distance = sum(distance) / len(distance)
     print(distance)
-    if(distance < 0.4):
+    if(distance < 0.2):
         return True
     else:
         return False
 
-    
     
 def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
     # 识别窗口bottom_location区域是否出现了bottom_name图片, 每隔0.5秒识别一次
@@ -172,10 +135,24 @@ def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
                 time.sleep(1)
                 break
         else:
-            if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png", 0):
+            if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png"):
                 time.sleep(1)
                 break
         time.sleep(0.5)
+
+def wait_untim_bottom_and_keyboard(w, bottom_name, bottom_location, key):
+    # 识别窗口bottom_location区域是否出现了bottom_name图片, 每隔0.5秒识别一次，没出现就按下key
+    while True:
+        screenshot(w, bottom_location).save("bottom.png")
+        if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png"):
+            time.sleep(1)
+            break
+        else:
+            key_down_up_n(key, 1)
+        time.sleep(0.5)
+
+    # 识别到bottom_name图片后，点击bottom_name图片
+    click_bottom(w, bottom_location)
 
 def act_cmd_list(w, cmd_list):
     # 执行指令列表
@@ -191,12 +168,43 @@ def act_cmd_list(w, cmd_list):
         if cmd[0] == 'W':
             location = bottom[cmd[2:]]
             wait_until_bottom_appear(w, cmd[2:], location)
-        
+        if cmd[0] == 'U':
+            location_key = cmd[2:].split('-')
+            location = bottom[location_key[0]]
+            key = keyboard[location_key[1]]
+            wait_untim_bottom_and_keyboard(w, location_key[0], location, key)
+
+
 def skillnum2keyboardlist(list, num):
     for i in range(0, num):
         list.append('S')
     list.append('enter')
     return list 
+
+def cut_image(image_path, cut_path, x0, y0, x1, y1):
+    # 截取图片的一部分
+    # image_path: 图片路径
+    # x0: 左上角x坐标
+    # y0: 左上角y坐标
+    # x1: 右下角x坐标
+    # y1: 右下角y坐标
+    img = Image.open(image_path)
+    cropped = img.crop((x0, y0, x1, y1))
+    cropped.save(cut_path)
+
+def click_img_in_scene(window, img_path):
+    # 在场景中点击图片，通过模板匹配实现
+    # w: 目标窗口
+    # img_path: 图片路径
+    screenshot(window, [0, 0, window_weight, window_height]).save("bottom.png")
+    img = cv2.imread("./bottom.png")
+    template = cv2.imread(img_path)
+    h,w=template.shape[:2]
+    result=cv2.matchTemplate(img, template, cv2.TM_CCOEFF)
+    min_val,max_val,min_loc,max_loc=cv2.minMaxLoc(result)
+    print(max_loc)
+    click_bottom(window, [max_loc[0], max_loc[1], max_loc[0] + w, max_loc[1] + h])
+
 
 if __name__ == "__main__":
     # pass
@@ -251,5 +259,4 @@ if __name__ == "__main__":
     # pag.click(w.left + bottom["shengdianmoshi_bottom"][0], w.top + bottom["shengdianmoshi_bottom"][1])
     # time.sleep(0.5)
     # click_bottom(w, bottom["zaiwanyici"])
-    pixel_list = config['compare']['xingdongkaishi']
-    compare_images_by_pixel("./bottom.png", "./bottom/xingdongkaishi.png", pixel_list)
+    compare_images("./bottom.png", bottom_dir + "/" + "tuichu" + ".png")

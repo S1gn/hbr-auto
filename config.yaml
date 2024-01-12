@@ -14,6 +14,8 @@ bottom:
   xiangqing: [906, 522, 1080, 570]
   zhandou: [660, 482, 929, 552]
   max: [826, 400, 876, 451]
+  tuichu: [358, 517, 619, 591]
+  ditu: [1094, 119, 1094, 119]
 
 compare:
   xingdongkaishi: [[5, 7], [37, 8], [51, 8], [70, 8], [87, 8], [15, 14], [93, 21], [93, 19]]
@@ -25,6 +27,7 @@ keyboard:
   right: [39, 0x4d]
   S: [83, 0x1f]
   W: [87, 0x11]
+  D: [68, 0x20]
   enter: [13, 0x1c]
   A: [65, 0x1e]
   5: [53, 0x06]
@@ -36,7 +39,8 @@ keyboard:
 
 daily:
   arachnelineA:
-    start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, K-enter, B-max, K-enter]
+    start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, K-enter, K-enter]
+    # start: [B-qianghua, B-baoshi, K-W, K-enter, K-enter, K-enter, B-max, K-enter]
     select: 1
     skill-list: [
       [[1, 1, 2, 0], [2, 2, 0, 0], [3, 3, 2, 0]],
@@ -44,7 +48,7 @@ daily:
       [[1, 1, 4, 3], [2, 2, 4, 3], [3, 3, 1, 0]],
       [[1, 4, 1, 0], [2, 2, 0, 0], [3, 3, 4, 0]],
     ]
-    end: []
+    end: [U-tuichu-enter]
   
   shixiu:
     start: [B-qianghua, B-shixiu, B-sheding]
@@ -56,3 +60,34 @@ daily:
       ]
     end: [K-enter, W-zhandouchengguo, B-zhandouchengguo, B-zhandouchengguo, W-shengdianmoshi_img, B-shengdianmoshi_bottom, B-zaiwanyici]
 
+dungeon:
+  xianqu: 1
+  team1:
+    job: buffer
+    shanguang: true
+    skill: [[1, 7, -1], [2, 9, -1]]
+
+  team2:
+    job: buffer
+    shanguang: false
+    skill: [[2, 6, -1]]
+  
+  team3:
+    job: aoer
+    shanguang: true
+    skill: [[2, 15, 4], [3, 6, -1]]
+  
+  team4:
+    job: aoer
+    shanguang: false
+    skill: [[1, 15, 5], [2, 13, 4], [3, 9, -1], [4, 7, -1]]
+  
+  team5:
+    job: aoer
+    shanguang: false
+    skill: [[1, 14, 5], [2, 8, -1], [3, 7, -1]]
+  
+  team6:
+    job: aoer
+    shanguang: false
+    skill: [[1, 13, 5], [2, 10, -1], [3, 8, -1]]
