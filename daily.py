@@ -68,6 +68,7 @@ class Daily:
                         continue
             keyboard_list.append('enter')
             bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
+            
             print(keyboard_list)
             bc.key_down_up_list(keyboard_list)
     

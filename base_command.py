@@ -93,7 +93,7 @@ def compare_images(image1_path, image2_path):
     img2 = cv2.imread(image2_path)
     
     ssim = compare_ssim(img1, img2, multichannel=True)
-    print(ssim)
+    # print(ssim)
     if(ssim > 0.9):
         return True
     else:
@@ -115,7 +115,7 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
     print(distance)
     distance = sum(distance) / len(distance)
     print(distance)
-    if(distance < 0.2):
+    if(distance < 0.3):
         return True
     else:
         return False
