@@ -83,9 +83,9 @@ def key_down_up_list(key_list):
         bvk = keyboard[key][0]
         bScan = keyboard[key][1]
         win32api.keybd_event(bvk, bScan, 0, 0)
-        time.sleep(0.1)
+        time.sleep(0.3)
         win32api.keybd_event(bvk, bScan, win32con.KEYEVENTF_KEYUP, 0)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 
 def compare_images(image1_path, image2_path):

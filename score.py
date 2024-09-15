@@ -47,6 +47,7 @@ class Score:
         bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
 
     def battle(self):
+        turns = 0
         for round_skill in self.daily_config['skill-list']:
             keyboard_list = []
             for skill in round_skill:
@@ -76,11 +77,11 @@ class Score:
                         keyboard_list.append(skill[1])
             keyboard_list.append('enter')
             bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
-            
-            print(keyboard_list)
+            turns += 1
+            print(f"第{turns}轮", keyboard_list)
             time.sleep(0.5)
             bc.key_down_up_list(keyboard_list)
-            time.sleep(2)
+            time.sleep(5)
     
     def end(self):
         bc.act_cmd_list(self.w, self.daily_config['end'])
