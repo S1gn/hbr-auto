@@ -83,6 +83,7 @@ def key_down_up_list(key_list):
         bvk = keyboard[key][0]
         bScan = keyboard[key][1]
         win32api.keybd_event(bvk, bScan, 0, 0)
+        time.sleep(0.1)
         win32api.keybd_event(bvk, bScan, win32con.KEYEVENTF_KEYUP, 0)
         time.sleep(0.5)
 
@@ -112,10 +113,9 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
         # 计算两个三维向量之间的余弦相似度
         a = ((v1[0] - v2[0]) ** 2 + (int)(v1[1] - v2[1]) ** 2 + (int)(v1[2] - v2[2]) ** 2) ** 0.5 / 255   
         distance.append(a)
-    print(distance)
     distance = sum(distance) / len(distance)
     print(distance)
-    if(distance < 0.3):
+    if(distance < 0.35):
         return True
     else:
         return False

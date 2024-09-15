@@ -1,4 +1,3 @@
-certifi @ file:///C:/b/abs_85o_6fm0se/croot/certifi_1671487778835/work/certifi
 click==8.1.7
 colorama==0.4.6
 coloredlogs==15.0.1
