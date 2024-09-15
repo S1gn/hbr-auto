@@ -115,7 +115,7 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
         distance.append(a)
     distance = sum(distance) / len(distance)
     print(distance)
-    if(distance < 0.35):
+    if(distance < 0.32):
         return True
     else:
         return False

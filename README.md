@@ -11,7 +11,7 @@ HBR-auto脚本
 
 ##### 相关链接
 本期作业轴与技能顺序配置：https://docs.qq.com/sheet/DWU5KeGd4RHpZYkZt?tab=whe4fs   
-运行的1、2、3步打包环境：https://pan.baidu.com/s/13etAA8iHRwhv9wBY5o96hg?pwd=5xa7 提取码: 5xa7    
+运行的1、2、3步打包环境：https://pan.baidu.com/s/1JpuXL-5vWZ6ln_5HcGSchw?pwd=pjfz 提取码: pjfz       
 b站运行视频：https://www.bilibili.com/video/BV1Jh4UecEaR/   
 nga说明文章：在写
 
