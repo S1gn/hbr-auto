@@ -10,10 +10,10 @@ HBR-auto脚本
 6. 配置好队伍，进入打分，脚本自动运行
 
 ##### 相关链接
-本期作业轴与技能顺序配置：https://docs.qq.com/sheet/DWU5KeGd4RHpZYkZt?tab=whe4fs 
-v1.1懒人包：https://pan.baidu.com/s/1QSRvE62sn95zXgVPZX5r-g?pwd=rppe 提取码: rppe 
-v1.0懒人包：https://pan.baidu.com/s/1JpuXL-5vWZ6ln_5HcGSchw?pwd=pjfz 提取码: pjfz       
-b站运行视频：https://www.bilibili.com/video/BV1Jh4UecEaR/   
+本期作业轴与技能顺序配置：https://docs.qq.com/sheet/DWU5KeGd4RHpZYkZt?tab=whe4fs     
+v1.1懒人包：https://pan.baidu.com/s/1QSRvE62sn95zXgVPZX5r-g?pwd=rppe 提取码: rppe     
+v1.0懒人包：https://pan.baidu.com/s/1JpuXL-5vWZ6ln_5HcGSchw?pwd=pjfz 提取码: pjfz         
+b站运行视频：https://www.bilibili.com/video/BV1Jh4UecEaR/    
 nga说明文章：https://nga.178.com/read.php?tid=41675664
 
 ##### 怎么配置自己的作业
@@ -57,5 +57,5 @@ python
 2024.1.12 编写通用的日常脚本与配置，实现了自动配置时修
           实现宝石棱镜战demo，开始构思地下城脚本  
 2024.9.15 根据59B行动轴，设计了5带1纯路人稳定100w脚本
-2024.9.17 v1.1：修复了有些电脑上的粘键，行动开始的判断更准了，增加了根据行动轴自动生成指令的功能
+2024.9.17 v1.1：修复了有些电脑上的粘键，行动开始的判断更准了，能够回合中释放OD了，增加了根据行动轴自动生成指令的功能    
 ...
