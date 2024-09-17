@@ -50,10 +50,11 @@ class Score:
         turns = 0
         for round_skill in self.daily_config['skill-list']:
             keyboard_list = []
-            for skill in round_skill:
+            for i in range(0, 3):
+                skill = round_skill[i]
                 if skill[0] == 'O':
                     keyboard_list.append('O')
-                    continue
+                    break
                 # 位置不变
                 if(skill[0] == skill[1]):
                     if(skill[2] != 0):
@@ -75,13 +76,32 @@ class Score:
                     else:
                         keyboard_list.append(skill[0])
                         keyboard_list.append(skill[1])
-            keyboard_list.append('enter')
-            bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
-            turns += 1
-            print(f"第{turns}轮", keyboard_list)
-            time.sleep(0.5)
-            bc.key_down_up_list(keyboard_list)
-            time.sleep(5)
+            
+            # 回合中释放OD，先放技能，然后一直按O，直到能按出来
+            if len(round_skill) == 4:
+                keyboard_list.append('enter')
+                bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
+                bc.key_down_up_list(keyboard_list)
+                print(f"第{turns}轮", keyboard_list)
+                bc.wait_untim_bottom_and_keyboard(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], bc.keyboard["O"], True)
+                turns += 1
+                time.sleep(0.5)
+                # 回合中释放OD，保留上次技能，先14， 24， 34全恢复到默认
+                keyboard_list = [1, 4, 1, 4, 2, 4, 2, 4, 3, 4, 3, 4]
+                bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
+                bc.key_down_up_list(keyboard_list)
+                time.sleep(0.5)
+                
+            else:
+                keyboard_list.append('enter')
+                bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
+                turns += 1
+                print(f"第{turns}轮", keyboard_list)
+                time.sleep(0.5)
+                bc.key_down_up_list(keyboard_list)
+                time.sleep(5)
+
+            
     
     def end(self):
         bc.act_cmd_list(self.w, self.daily_config['end'])

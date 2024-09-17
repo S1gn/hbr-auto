@@ -74,7 +74,7 @@ def key_down_up_n(key, times):
     for i in range(times):
         win32api.keybd_event(key[0], key[1], 0, 0)
         win32api.keybd_event(key[0], key[1], win32con.KEYEVENTF_KEYUP, 0)
-        time.sleep(0.5)
+        time.sleep(0.3)
 
 def key_down_up_list(key_list):
     # 按下并释放某个按键列表
@@ -83,7 +83,7 @@ def key_down_up_list(key_list):
         bvk = keyboard[key][0]
         bScan = keyboard[key][1]
         win32api.keybd_event(bvk, bScan, 0, 0)
-        time.sleep(0.3)
+        time.sleep(0.1)
         win32api.keybd_event(bvk, bScan, win32con.KEYEVENTF_KEYUP, 0)
         time.sleep(0.3)
 
@@ -119,6 +119,40 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
         return True
     else:
         return False
+    
+
+def compare_images_by_pixel_range(image1_path, image2_path, pixel_range, step = 3):
+    img1 = np.array(Image.open(image1_path))  
+    img2 = np.array(Image.open(image2_path))
+    img3 = np.array(Image.open("bottom/xingdongkaishi_light.png"))
+    distance = []
+    distance_light = []
+    # range[x0, y0, x1, y1]，步长3, 构造像素序列
+    pixel_list = []
+    for i in range(pixel_range[1], pixel_range[3], step):
+        for j in range(pixel_range[0], pixel_range[2], step):
+            pixel_list.append([j, i])
+
+    # 比较像素序列中的像素是否相同
+    for pixel in pixel_list:
+        v1 = img1[pixel[1], pixel[0]]
+        v2 = img2[pixel[1], pixel[0]]
+        v3 = img3[pixel[1], pixel[0]]
+        v1 = [int(v1[0]), int(v1[1]), int(v1[2])]
+        v2 = [int(v2[0]), int(v2[1]), int(v2[2])]
+        v3 = [int(v3[0]), int(v3[1]), int(v3[2])]
+        # 计算两个三维向量之间的余弦相似度
+        a = ((v1[0] - v2[0]) ** 2 + (int)(v1[1] - v2[1]) ** 2 + (int)(v1[2] - v2[2]) ** 2) ** 0.5 / 255
+        b = ((v1[0] - v3[0]) ** 2 + (int)(v1[1] - v3[1]) ** 2 + (int)(v1[2] - v3[2]) ** 2) ** 0.5 / 255
+        distance.append(a)
+        distance_light.append(b)
+    distance1 = sum(distance) / len(distance)
+    distance2 = sum(distance_light) / len(distance_light)
+    print(distance1, distance2)
+    if(distance1 < 0.1 or distance2 < 0.1):
+        return True
+    else:
+        return False
 
     
 def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
@@ -131,7 +165,7 @@ def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
     while True:
         screenshot(w, bottom_location).save("bottom.png")
         if(by_pixel):
-            if compare_images_by_pixel("./bottom.png", bottom_dir + "/" + bottom_name + ".png", config['compare'][bottom_name]):
+            if compare_images_by_pixel_range("./bottom.png", bottom_dir + "/" + bottom_name + ".png", config['compare'][bottom_name]):
                 time.sleep(1)
                 break
         else:
@@ -140,15 +174,22 @@ def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
                 break
         time.sleep(0.5)
 
-def wait_untim_bottom_and_keyboard(w, bottom_name, bottom_location, key):
+def wait_untim_bottom_and_keyboard(w, bottom_name, bottom_location, key, by_pixel=False):
     # 识别窗口bottom_location区域是否出现了bottom_name图片, 每隔0.5秒识别一次，没出现就按下key
     while True:
         screenshot(w, bottom_location).save("bottom.png")
-        if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png"):
-            time.sleep(1)
-            break
+        if(by_pixel):
+            if compare_images_by_pixel_range("./bottom.png", bottom_dir + "/" + bottom_name + ".png", config['compare'][bottom_name]):
+                time.sleep(1)
+                break
+            else:
+                key_down_up_n(key, 3)
         else:
-            key_down_up_n(key, 1)
+            if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png"):
+                time.sleep(1)
+                break
+            else:
+                key_down_up_n(key, 3)
         time.sleep(0.5)
 
     # 识别到bottom_name图片后，点击bottom_name图片
