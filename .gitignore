@@ -1,2 +1,3 @@
 bottom.png
 __pycache__/base_command.cpython-37.pyc
+*.pyc

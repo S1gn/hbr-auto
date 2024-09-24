@@ -1,12 +1,15 @@
 # 主要用于实现基础的操作命令
 import pygetwindow as gw
 import pyautogui as pag
+import string
 import win32api
 import win32con
 import yaml
 import time
 import cv2
 import numpy as np
+import ddddocr
+import math
 from skimage.metrics import structural_similarity as compare_ssim
 from skimage.metrics import peak_signal_noise_ratio as compare_psnr
 from PIL import Image
@@ -16,7 +19,14 @@ bottom_dir = "./bottom"
 target_window_title = "HeavenBurnsRed"
 window_height = 720
 window_weight = 1280
-
+dp_location_list = [
+    [159, 626, 213, 641],
+    [342, 626, 396, 641],
+    [526, 626, 577, 641],
+    [692, 629, 735, 641],
+    [844, 629, 887, 641],
+    [997, 629, 1040, 641]
+]
 
 def read_config(config_path):
     # 读取配置文件
@@ -121,35 +131,27 @@ def compare_images_by_pixel(image1_path, image2_path, pixel_list):
         return False
     
 
-def compare_images_by_pixel_range(image1_path, image2_path, pixel_range, step = 3):
+def compare_images_by_pixel_range(image1_path, image2_path, pixel_range, compare_value, step = 3):
     img1 = np.array(Image.open(image1_path))  
     img2 = np.array(Image.open(image2_path))
-    img3 = np.array(Image.open("bottom/xingdongkaishi_light.png"))
     distance = []
-    distance_light = []
     # range[x0, y0, x1, y1]，步长3, 构造像素序列
     pixel_list = []
     for i in range(pixel_range[1], pixel_range[3], step):
         for j in range(pixel_range[0], pixel_range[2], step):
             pixel_list.append([j, i])
-
     # 比较像素序列中的像素是否相同
     for pixel in pixel_list:
         v1 = img1[pixel[1], pixel[0]]
         v2 = img2[pixel[1], pixel[0]]
-        v3 = img3[pixel[1], pixel[0]]
         v1 = [int(v1[0]), int(v1[1]), int(v1[2])]
         v2 = [int(v2[0]), int(v2[1]), int(v2[2])]
-        v3 = [int(v3[0]), int(v3[1]), int(v3[2])]
         # 计算两个三维向量之间的余弦相似度
         a = ((v1[0] - v2[0]) ** 2 + (int)(v1[1] - v2[1]) ** 2 + (int)(v1[2] - v2[2]) ** 2) ** 0.5 / 255
-        b = ((v1[0] - v3[0]) ** 2 + (int)(v1[1] - v3[1]) ** 2 + (int)(v1[2] - v3[2]) ** 2) ** 0.5 / 255
         distance.append(a)
-        distance_light.append(b)
+
     distance1 = sum(distance) / len(distance)
-    distance2 = sum(distance_light) / len(distance_light)
-    print(distance1, distance2)
-    if(distance1 < 0.1 or distance2 < 0.1):
+    if(distance1 < compare_value):
         return True
     else:
         return False
@@ -165,7 +167,35 @@ def wait_until_bottom_appear(w, bottom_name, bottom_location, by_pixel=False):
     while True:
         screenshot(w, bottom_location).save("bottom.png")
         if(by_pixel):
-            if compare_images_by_pixel_range("./bottom.png", bottom_dir + "/" + bottom_name + ".png", config['compare'][bottom_name]):
+            if compare_images_by_pixel_range("./bottom.png", 
+                                             bottom_dir + "/" + bottom_name + ".png", 
+                                             config['compare'][bottom_name],
+                                             config['compare']['value']
+                                             ):
+                time.sleep(1)
+                break
+        else:
+            if compare_images("./bottom.png", bottom_dir + "/" + bottom_name + ".png"):
+                time.sleep(1)
+                break
+        time.sleep(0.5)
+
+def wait_until_bottom_and_click(w, bottom_name, bottom_location, click_name, by_pixel=False):
+    # 识别窗口bottom_location区域是否出现了bottom_name图片, 每隔0.5秒识别一次
+    # 通过截图区域识别相似度来判断是否出现了bottom_name图片
+    # w: 目标窗口
+    # bottom_name: 底部按钮的名称
+    # bottom_location: 底部按钮的位置
+
+    while True:
+        screenshot(w, bottom_location).save("bottom.png")
+        click_bottom(w, config['bottom'][click_name])
+        if(by_pixel):
+            if compare_images_by_pixel_range("./bottom.png", 
+                                             bottom_dir + "/" + bottom_name + ".png", 
+                                             config['compare'][bottom_name],
+                                             config['compare']['value']
+                                             ):
                 time.sleep(1)
                 break
         else:
@@ -179,7 +209,11 @@ def wait_untim_bottom_and_keyboard(w, bottom_name, bottom_location, key, by_pixe
     while True:
         screenshot(w, bottom_location).save("bottom.png")
         if(by_pixel):
-            if compare_images_by_pixel_range("./bottom.png", bottom_dir + "/" + bottom_name + ".png", config['compare'][bottom_name]):
+            if compare_images_by_pixel_range("./bottom.png", 
+                                             bottom_dir + "/" + bottom_name + ".png", 
+                                             config['compare'][bottom_name],
+                                             config['compare']['value']
+                                             ):
                 time.sleep(1)
                 break
             else:
@@ -246,58 +280,103 @@ def click_img_in_scene(window, img_path):
     print(max_loc)
     click_bottom(window, [max_loc[0], max_loc[1], max_loc[0] + w, max_loc[1] + h])
 
+def get_dp_by_ocr(w, ocr):
+    # 通过ocr获取截图区域的数字
+    # w: 目标窗口
+    # location_list: 六个dp条得坐标列表
+    screenshot = pag.screenshot(region=(w.left, w.top, window_weight, window_height))
+    # screenshot = Image.open("./scene/残血dp.png")
+    dp_list = []
+    location_list = dp_location_list
+    for i in range(0, 6):
+        dp_image = screenshot.crop(location_list[i])
+        dp_num = ocr.classification(dp_image)
+        if dp_num.isnumeric():
+            dp_list.append(int(dp_num))
+        else:
+            dp_list.append("error")
+    return dp_list
+
+def get_dp_by_percent(w):
+    # 通过识别dp条像素百分比判断dp大小
+    location_list = [
+        [61, 641, 131, 645],
+        [244, 641, 314, 645],
+        [427, 641, 497, 645],
+        [614, 641, 669, 644],
+        [767, 641, 822, 644],
+        [920, 641, 975, 644]
+    ]
+    dp_list = []
+    screenshot = pag.screenshot(region=(w.left, w.top, window_weight, window_height))
+    # 读一个本地图片试试
+    # screenshot = Image.open("./scene/破盾.png")
+    for i in range(0, 3):
+        dp_image = screenshot.crop(location_list[i])
+        # 从左到右遍历像素，比较与[47,45,63]相似度，超过三个像素相似，判定为1
+        # 长度为70，宽度为5
+        img = np.array(dp_image)
+        black_num = 0
+        # 取前四个，求与247 223 251距离
+        # print(img[0][0], img[1][0], img[2][0], img[3][0])
+        break_similarity = 0
+        for j in range(0, 4):
+            color1 = img[j, 0]
+            color2 = [247, 223, 251]
+            break_similarity += math.sqrt((color1[0] - color2[0]) ** 2 + (color1[1] - color2[1]) ** 2 + (color1[2] - color2[2]) ** 2)
+        if break_similarity > 100:
+            dp_list.append(0.0)
+            continue
+        for j in range(1, 70):
+            count = 0
+            for k in range(0, 4):
+                color1 = img[k, j]
+                color2 = [47, 45, 63]
+                similarity = math.sqrt((color1[0] - color2[0]) ** 2 + (color1[1] - color2[1]) ** 2 + (color1[2] - color2[2]) ** 2)
+                # print(similarity)
+                if similarity < 10:
+                    count += 1
+            # print(count)
+                if count >= 3:
+                    black_num += 1
+                    break
+        dp_list.append(round(1 - (black_num / 70), 3))
+    
+    
+    for i in range(3, 6):
+        dp_image = screenshot.crop(location_list[i])
+        dp_image.save("dp{}.png".format(i))
+        img = np.array(dp_image)
+        break_similarity = 0
+        for j in range(0, 3):
+            color1 = img[j, 0]
+            color2 = [247, 223, 251]
+            break_similarity += math.sqrt((color1[0] - color2[0]) ** 2 + (color1[1] - color2[1]) ** 2 + (color1[2] - color2[2]) ** 2)
+        # print(break_similarity)
+        if break_similarity > 75:
+            dp_list.append(0.0)
+            continue
+        black_num = 0
+        for j in range(0, 55):
+            count = 0
+            for k in range(0, 3):
+                color1 = img[k, j]
+                color2 = [47, 45, 63]
+                similarity = math.sqrt((color1[0] - color2[0]) ** 2 + (color1[1] - color2[1]) ** 2 + (color1[2] - color2[2]) ** 2)
+                if similarity < 10:
+                    count += 1
+            # print(count)
+                if count >= 2:
+                    black_num += 1
+                    break
+        dp_list.append(round(1 - (black_num / 55), 3))
+    return dp_list
 
 if __name__ == "__main__":
     # pass
-    # w = init_window(target_window_title)
-
-    # click_bottom(w, bottom["qianghua"])
-    # click_bottom(w, bottom["shixiu"])
-    # click_bottom(w, bottom["sheding"])
-    # click_bottom(w, bottom["xuandui"])
-    # key_down_up_n(keyboard["S"], 4)
-    # key_down_up_n(keyboard["enter"], 1)
-    # click_bottom(w, bottom["chuji"])
-
-    # # sheding_location = bottom["sheding"]
-    # # screenshot(w, sheding_location).save("sheding.png")
-    # # xuandui_location = bottom["xuandui"]
-    # # screenshot(w, xuandui_location).save("xuandui.png")
-    # # click_bottom(w, bottom["xuandui"])
-    # # key_down_up_n(keyboard["S"], 4)
-    # # chuji_location = bottom["chuji"]
-    # # screenshot(w, chuji_location).save("chuji.png")
-    # # xindongkaishi_location = bottom["xindongkaishi"]
-    # # screenshot(w, xindongkaishi_location).save("xindongkaishi.png")
-
-    # time.sleep(5)
-    # wait_until_bottom_appear(w, "xingdongkaishi", bottom["xingdongkaishi"])
-    # # 5号位暗洛丽塔放2号位, 2号位释放2技能 key 5 2 2 s s enter
-    # key_list = [keyboard[5], keyboard[2], keyboard[2], keyboard["S"], keyboard["S"], keyboard["enter"]]
-    # key_down_up_list(key_list)
-    # # 3号位孔明释放2技能给2号位，key3 s s enter 2
-    # key_list = [keyboard[3], keyboard["S"], keyboard["S"], keyboard["enter"], keyboard[2]]
-    # key_down_up_list(key_list)
-    # key_down_up_n(keyboard["enter"], 1)
-
-    # wait_until_bottom_appear(w, "xingdongkaishi", bottom["xingdongkaishi"])
-    # # 1号位释放1技能， key 1 s enter
-    # key_list = [keyboard[1], keyboard["S"], keyboard["enter"]]
-    # key_down_up_list(key_list)
-    # # 2号位释放3技能， key 2 s s s enter
-    # key_list = [keyboard[2], keyboard["S"], keyboard["S"], keyboard["S"], keyboard["enter"]]
-    # key_down_up_list(key_list)
-    # # 3号位换6号位圣华，3号位释放2技能给2号位，key 3 6 3 s s enter 2
-    # key_list = [keyboard[3], keyboard[6], keyboard[3], keyboard["S"], keyboard["S"], keyboard["enter"] ,keyboard[2]]
-    # key_down_up_list(key_list)
-    # key_down_up_n(keyboard["enter"], 1)
-
-    # wait_until_bottom_appear(w, "zhandouchengguo", bottom["zhandouchengguo"])
-    # click_bottom(w, bottom["zhandouchengguo"])
-    # wait_until_bottom_appear(w, "zhandouchengguo", bottom["zhandouchengguo"])
-    # click_bottom(w, bottom["zhandouchengguo"])
-    # wait_until_bottom_appear(w, "shengdianmoshi_img", bottom["shengdianmoshi_img"])
-    # pag.click(w.left + bottom["shengdianmoshi_bottom"][0], w.top + bottom["shengdianmoshi_bottom"][1])
-    # time.sleep(0.5)
-    # click_bottom(w, bottom["zaiwanyici"])
-    compare_images("./bottom.png", bottom_dir + "/" + "tuichu" + ".png")
+    w = init_window(target_window_title)
+    # screenshot(w, [0, 0, window_weight, window_height]).save("bottom.png")
+    # ocr = ddddocr.DdddOcr()
+    # print(get_dp_by_ocr(w, ocr))
+    print(get_dp_by_percent(w))
+    

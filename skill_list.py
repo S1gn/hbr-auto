@@ -5,6 +5,7 @@
 # 人物技能对应工作表：skill_name
 import openpyxl
 import argparse
+from if_cmd import translate_if_cmd
 
 def swap(lst, a, b):
     tmp = lst[a]
@@ -23,35 +24,35 @@ def parse_opt():
 def read_excel(path):
     wb = openpyxl.load_workbook(path)
     turns = wb['turns']
-    skill_name = wb['skill_name']
-    return turns, skill_name
+    skill_name1 = wb['skill_name1']
+    skill_name2 = wb['skill_name2']
+    return turns, skill_name1, skill_name2
 
 def read_skill_name(skill_name):
     # B2-G2
     character_name = []
     for i in range(2, 8):
-        character_name.append(skill_name.cell(2, i).value)
+        character_name.append(str(skill_name.cell(2, i).value))
     skill_list = []
     for i in range(0, 6):
         one_skill = []
         for j in range(1, 9):
-            one_skill.append(skill_name.cell(j + 2, i + 2).value)
+            one_skill.append(str(skill_name.cell(j + 2, i + 2).value))
         skill_list.append(one_skill)
     return character_name, skill_list
 
-def read_turns_list(turns, turns_num):
+def read_turns_list(turns, turns_num, now_turns_num):
     turns_list = []
     for i in range(1, turns_num + 1):
         one_turn = []
         for j in range(1, 9):
-            one_turn.append(turns.cell(i + 3, j + 2).value)
+            one_turn.append(turns.cell(i + 3 + now_turns_num, j + 2).value)
         turns_list.append(one_turn)
     return turns_list
 
-def get_cmd(turns_list, skill_list, character_name, log=False):
+def get_cmd(turns_list, skill_list, character_name, now_pos, if_cmd_list=None, log=False):
     cmd_list = []
     # 维护一个动态的列表，表示人物当前位置
-    now_pos = [0, 1, 2, 3, 4, 5]
     for i in range(0, len(turns_list)):
         if turns_list[i][6] == 1 or turns_list[i][6] == '1':
             val = 'O'
@@ -92,31 +93,26 @@ def get_cmd(turns_list, skill_list, character_name, log=False):
                     if(log):
                         print("    本条指令：", character_name[ordered_char_list[k]], "释放", turns_list[i][ordered_char_list[k]], end=' ')
                         print("    交换位置：", character_name[now_pos[k]], character_name[now_pos[char_pos - 1]])
-                    now_pos = swap(now_pos, char_pos - 1, k)
+                    
                     
                     skill_cmd = ordered_cmd_list[k].split('-')
-                    skill_turn = skill_list[ordered_char_list[k]].index(skill_cmd[1])
-                    skill_target = 0
-                    if len(skill_cmd) == 3:
-                        skill_target_name = skill_cmd[2]
-                        skill_target = now_pos.index(character_name.index(skill_target_name)) + 1
-                    this_cmd[k] = [k + 1, char_pos, skill_turn, skill_target]
+                    if skill_cmd[1] == 'IF':
+                        if_cmd = if_cmd_list[int(skill_cmd[2]) - 1]
+                        trans_cmd = translate_if_cmd(if_cmd[0], if_cmd[1], if_cmd[2], skill_list, now_pos, character_name)
+                        trans_cmd[0] = k + 1
+                        this_cmd[k] = trans_cmd.copy()
+                    else:
+                        now_pos = swap(now_pos, char_pos - 1, k)
+                        skill_turn = skill_list[ordered_char_list[k]].index(skill_cmd[1])
+                        skill_target = 0
+                        if len(skill_cmd) == 3:
+                            skill_target_name = skill_cmd[2]
+                            skill_target = now_pos.index(character_name.index(skill_target_name)) + 1
+                        this_cmd[k] = [k + 1, char_pos, skill_turn, skill_target]
                 
                 # 重排后，直接跳过
                 break
 
-            # if turns_list[i][j].startswith('1'):
-            #     char_pos = now_pos.index(j) + 1
-            #     now_pos = swap(now_pos, j, 0)
-            #     skill_cmd = turns_list[i][j].split('-')
-            #     skill_turn = skill_list[j].index(skill_cmd[1])
-            #     skill_target = 0
-            #     if len(skill_cmd) == 3:
-            #         skill_target_name = skill_cmd[2]
-            #         skill_target = now_pos[character_name.index(skill_target_name)] + 1
-            #     this_cmd[0] = [1, char_pos, skill_turn, skill_target]
-                # if i == 4:
-                #     print(this_cmd)
             # 无所谓顺序的
             else:
                 # 保持位置不变，实现很麻烦，要指令重排，筛掉位置不变的，再设置顺序
@@ -145,10 +141,12 @@ def get_cmd(turns_list, skill_list, character_name, log=False):
             
 
         cmd_list.append(this_cmd.copy())
-    return cmd_list
+    return cmd_list, now_pos
 
 def output_cmd(cmd_list, output):
-    with open(output, 'w') as f:
+    # 在后面接着写
+    with open(output, 'a') as f:
+        f.write("--------------------------------------\n")
         for i in range(0, len(cmd_list)):
             f.write("[");
             for j in range(len(cmd_list[i])):
@@ -159,18 +157,61 @@ def output_cmd(cmd_list, output):
                 f.write("],\n")
             else:
                 f.write("]\n")
+        f.write("--------------------------------------\n")
+
+def read_if_cmd(turns_sheet):
+    # 读取if指令 i=3, j=10
+    if_cmd_list = []
+    i = 4
+    if_cmd_text = turns_sheet.cell(i, 11).value
+    if_cmd = []
+    # [函数名，[目标1，目标2....]，指令]
+    while if_cmd_text != None:
+        cmd_name = if_cmd_text.split('(')[0]
+        cmd_target = if_cmd_text.split('(')[1].split(')')[0].split(',')
+        cmd_target = [x for x in cmd_target]
+        cmd = if_cmd_text.split('-')[1]
+        if_cmd = [cmd_name, cmd_target, cmd]
+        if_cmd_list.append(if_cmd)
+        i += 1
+        if_cmd_text = turns_sheet.cell(i, 11).value
+    return if_cmd_list
 
 if __name__ == "__main__":
     opt = parse_opt()
-    turns, skill_name = read_excel(opt.path)
-    turns_num = turns.cell(1, 2).value
-    character_name, skill_list = read_skill_name(skill_name)
-    turns_list = read_turns_list(turns, turns_num)
-    cmd_list = get_cmd(turns_list, skill_list, character_name, opt.log)
+    turns, skill_name1, skill_name2 = read_excel(opt.path)
+    if_cmd_list = read_if_cmd(turns)
 
-    if(opt.log):
-        print("指令列表：")
-        for i in range(0, len(cmd_list)):
-            print(cmd_list[i])
+    # 清空cmd_list.txt
+    with open(opt.output, 'w') as f:
+        f.write("")
+    # 读取最多5个回合数
+    truns_num = []
+    for i in range(2, 7):
+        if turns.cell(1, i).value == None:
+            break
+        truns_num.append(int(turns.cell(1, i).value))
 
-    output_cmd(cmd_list, opt.output)
+    now_turns_num = 0
+    battle1_pos = [0, 1, 2, 3, 4, 5]
+    battle2_pos = [0, 1, 2, 3, 4, 5]
+    for i in range(0, len(truns_num)):
+        if i % 2 == 0:
+            skill_name = skill_name1
+            character_name, skill_list = read_skill_name(skill_name)
+            turns_list = read_turns_list(turns, truns_num[i], now_turns_num)
+            cmd_list, battle1_pos = get_cmd(turns_list, skill_list, character_name, battle1_pos, if_cmd_list, opt.log)
+        else:
+            skill_name = skill_name2
+            character_name, skill_list = read_skill_name(skill_name)
+            turns_list = read_turns_list(turns, truns_num[i], now_turns_num)
+            cmd_list, battle2_pos = get_cmd(turns_list, skill_list, character_name, battle2_pos, if_cmd_list, opt.log)
+
+        output_cmd(cmd_list, "./cmd_list.txt")
+
+        if(opt.log):
+            print("指令列表：")
+            for j in range(0, len(cmd_list)):
+                print(cmd_list[j])
+
+        now_turns_num += truns_num[i]

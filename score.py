@@ -2,6 +2,7 @@
 # 参考行动轴：https://nga.178.com/read.php?tid=41656241
 
 import base_command as bc;
+import ddddocr
 import time
 
 config_path = "./config.yaml"
@@ -10,6 +11,7 @@ class Score:
         self.w = window
         self.daily_name = daily_name
         self.config = bc.read_config(config_path)['score']
+        self.ocr = ddddocr.DdddOcr()
         if self.daily_name not in self.config:
             print(f"找不到 '{self.daily_name}' 的配置。")
             exit()
