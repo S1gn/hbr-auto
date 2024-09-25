@@ -84,9 +84,9 @@ class Score:
                 keyboard_list.append('enter')
                 bc.wait_until_bottom_appear(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], True)
                 bc.key_down_up_list(keyboard_list)
+                turns += 1
                 print(f"第{turns}轮", keyboard_list)
                 bc.wait_untim_bottom_and_keyboard(self.w, "xingdongkaishi", bc.bottom["xingdongkaishi"], bc.keyboard["O"], True)
-                turns += 1
                 time.sleep(0.5)
                 # 回合中释放OD，保留上次技能，先14， 24， 34全恢复到默认
                 keyboard_list = [1, 4, 1, 4, 2, 4, 2, 4, 3, 4, 3, 4]

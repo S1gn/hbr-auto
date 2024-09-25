@@ -227,7 +227,7 @@ def wait_untim_bottom_and_keyboard(w, bottom_name, bottom_location, key, by_pixe
         time.sleep(0.5)
 
     # 识别到bottom_name图片后，点击bottom_name图片
-    click_bottom(w, bottom_location)
+    # click_bottom(w, bottom_location)
 
 def act_cmd_list(w, cmd_list):
     # 执行指令列表
